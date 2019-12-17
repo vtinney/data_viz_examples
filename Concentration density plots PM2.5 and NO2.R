@@ -1,3 +1,5 @@
+# Density plots of comparing concentration datasets for PM2.5 and NO2 in the Oakland, California area using the ggplot package.
+
 library(mapdeck)
 library(raster)
 library(rgdal)
