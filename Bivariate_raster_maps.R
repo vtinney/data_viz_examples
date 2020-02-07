@@ -22,6 +22,8 @@ library(extrafont)
 loadfonts()
 library(ggmap)
 
+#Functions from: http://rfunctions.blogspot.com/2015/03/bivariate-maps-bivariatemap-function.html
+
 base <- get_stamenmap(bbox=c(left=-122.3275, bottom=37.71583, top=37.8325,right=-122.1475),
                maptype = "terrain-lines",
                zoom=12,
