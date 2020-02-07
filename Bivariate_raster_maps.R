@@ -22,8 +22,6 @@ library(extrafont)
 loadfonts()
 library(ggmap)
 
-#Functions from: http://rfunctions.blogspot.com/2015/03/bivariate-maps-bivariatemap-function.html
-
 base <- get_stamenmap(bbox=c(left=-122.3275, bottom=37.71583, top=37.8325,right=-122.1475),
                maptype = "terrain-lines",
                zoom=12,
@@ -90,31 +88,34 @@ colnames(rc_df) <- c("Spearman","p_value","x", "y")
 
 
 colmat<-function(nquantiles=10, upperleft=rgb(0,150,235, maxColorValue=255), upperright=rgb(130,0,80, maxColorValue=255), bottomleft="grey", bottomright=rgb(255,230,15, maxColorValue=255), xlab="x label", ylab="y label"){
-  my.data<-seq(0,1,.01)
+  my.data<-seq(-1,1,.01)
   my.class<-classIntervals(my.data,n=nquantiles,style="quantile")
   my.pal.1<-findColours(my.class,c(upperleft,bottomleft))
   my.pal.2<-findColours(my.class,c(upperright, bottomright))
-  col.matrix<-matrix(nrow = 101, ncol = 101, NA)
-  for(i in 1:101){
+  col.matrix<-matrix(nrow = 202, ncol = 201, NA)
+  for(i in 1:201){
     my.col<-c(paste(my.pal.1[i]),paste(my.pal.2[i]))
-    col.matrix[102-i,]<-findColours(my.class,my.col)}
-  plot(c(1,1),pch=19,col=my.pal.1, cex=0.5,xlim=c(0,1),ylim=c(0,1),frame.plot=F, xlab=xlab, ylab=ylab,cex.lab=0.7)
-  for(i in 1:101){
+    col.matrix[202-i,]<-findColours(my.class,my.col)}
+  plot(c(1,1),pch=19,col=my.pal.1, cex=0.5,xlim=c(-1,1),ylim=c(0,1),frame.plot=F, xlab=xlab, ylab=ylab,cex.lab=0.7)
+  for(i in 1:201){
     col.temp<-col.matrix[i-1,]
-    points(my.data,rep((i-1)/100,101),pch=15,col=col.temp, cex=1)}
-  seqs<-seq(0,100,(100/nquantiles))
+    points(my.data,rep((i-1)/200,201),pch=15,col=col.temp, cex=1)}
+  seqs<-seq(0,200,(200/nquantiles))
   seqs[1]<-1
   col.matrix<-col.matrix[c(seqs), c(seqs)]}
 
- col.matrix<-as.grob(function () colmat(nquantiles=10, upperleft="#e9e29c", upperright="#e9e29c", 
-                    bottomleft="#cf597e", bottomright="#009392", 
-                   xlab="Spearman correlation", ylab="p-value"))
+
+ col.matrix<-as.grob(function () colmat(nquantiles=10, upperleft="#eeb479", upperright="#e9e29c", 
+                                        bottomleft="#cf597e", bottomright="#009392",
+                                        xlab="Spearman correlation", ylab="p-value"))
  
- col.matrix2<-(colmat(nquantiles=10, upperleft="#e9e29c", upperright="#e9e29c", 
-                            bottomleft="#cf597e", bottomright="#009392", 
+ 
+ col.matrix2<-(colmat(nquantiles=10, upperleft="#eeb479", upperright="#e9e29c", 
+                      bottomleft="#cf597e", bottomright="#009392",
                             xlab="Spearman correlation", ylab="p-value"))
 
-
+ 
+ 
 bivariate.map<-function(rasterx, rastery, colormatrix=col.matrix, nquantiles=10){
   quanmean<-getValues(rasterx)
   temp<-data.frame(quanmean, quantile=rep(NA, length(quanmean)))
