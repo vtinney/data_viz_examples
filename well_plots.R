@@ -140,3 +140,56 @@ guide = guide_legend(
     labs(title='A. Well count per US county.',
          subtitle='',
          caption='Well data 2014 from the Energy Administration Agency published by Oak Ridge National Laboratories.')
+
+
+vd.pm <- raster('conc.us.vd.pm.2016.tif')
+r <- vd.pm
+
+r <- crop(r, co)
+r <- mask(r, co)
+
+r[r == 0] <- NA
+r.min <- minValue(r)
+r.max <- maxValue(r)
+min.r.label <- round(r.min,0)
+max.r.label <- round(r.max,0)
+df <- rasterToPoints(r)
+df <- as.data.frame(df)
+colnames(df) <- c('lon','lat','val')
+r.mean <- round((r.min+r.max)/2,0)
+
+pm <- autoplot(base)  +
+  geom_tile(data=df,aes(lon, lat, fill = val),alpha=0.8) +
+  scale_fill_gradient2(expression(paste(µg/m^3)),
+                       low = "#A16928", 
+                       mid = "#edeac2", 
+                       high = "#2887a1",
+                       midpoint = r.mean,
+                       breaks=c(r.min,r.mean,r.max),
+                       labels=c(min.r.label,r.mean,max.r.label),
+                       limits=c(r.min, r.max),
+                       na.value = 'grey50',
+                       guide = guide_colourbar(
+                         direction = "horizontal",
+                         label=TRUE,
+                         keyheight = unit(2, units = "mm"),
+                         title.position = 'top',
+                         title.hjust = 0.5,
+                         label.hjust = 0.5,
+                         barwidth = 15,
+                         nrow = 1,
+                         byrow = T,
+                         label.position = "bottom"))+
+  geom_path(data = co.f, aes(x = long, y = lat, group = group), 
+            color = "white", size = 0.1)+
+  geom_path(data = state.f, aes(x = long, y = lat, group = group), 
+            color = "white", size = 0.1)+
+  theme_map() + ####
+  theme(legend.position = "bottom") +
+  labs(title='B. US fine particulate matter concentrations.',
+       subtitle='van Donkelaar et al. 2016.') ###############################################
+#ggsave('us.vd.pm.png',dpi=320)
+#ggsave('us.vd.pm.pdf')
+
+plot <- plot_grid(q, pm)
+ggsave('test_grid2.pdf', height=7, width=14)
