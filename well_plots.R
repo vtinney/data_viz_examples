@@ -60,7 +60,7 @@ setwd('/GWSPH/home/vtinney/NIH/')
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-setwd('C:/Users/vat05/Google Drive/NIH/GIS/')
+# setwd('C:/Users/vat05/Google Drive/NIH/GIS/')
 list.files()
 
 shp <- readOGR(dsn=getwd(), layer='wellsfinal')
@@ -142,6 +142,85 @@ guide = guide_legend(
          caption='Well data 2014 from the Energy Administration Agency published by Oak Ridge National Laboratories.')
 
 
+#ggsave('wells_test6.png',dpi=320)
+#ggsave('wells.pdf')
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+country <- readOGR(dsn=getwd(), layer='us')
+
+co <- crop(country, state)
+
+us.lark <- raster('conc.lark.us.tif')
+r <- us.lark
+
+r <- crop(r, co)
+r <- mask(r, co)
+
+co.f <- fortify(co) %>% 
+  mutate(id = as.numeric(id))
+
+
+brks <- c(1,5,7,8,10,30,35)
+labels <- c('1','2-5','6-7','8-10','11-30','>30')
+
+
+
+r[r == 0] <- NA
+r.min <- minValue(r)
+r.max <- maxValue(r)
+min.r.label <- round(r.min,0)
+max.r.label <- round(r.max,0)
+df <- rasterToPoints(r)
+df <- as.data.frame(df)
+colnames(df) <- c('lon','lat','val')
+r.mean <- round((r.min+r.max)/2,0)
+
+df$brks <- cut(df$val, 
+               breaks = brks, 
+               include.lowest = TRUE, 
+               labels = labels)
+
+brks_scale <- levels(df$brks)
+labels_scale <- brks_scale
+
+no2 <- autoplot(base)  +
+  geom_tile(data=df,aes(lon, lat, fill = df$brks),alpha=0.8) +
+  scale_fill_manual(values=c('#A16928','#bd925a','#edeac2','#b5c8b8','#79a7ac','#2887a1'),
+                   name = "ppb",
+                   breaks=brks_scale,
+                   labels = labels_scale,
+                   drop=FALSE,
+                   na.value = '#A16928',
+                   guide = guide_legend(
+                     direction = "horizontal",
+                     keyheight = unit(2, units = "mm"),
+                     keywidth = unit(140 / length(labels), units = "mm"),
+                     title.position = 'top',
+                     # I shift the labels around, the should be placed 
+                     # exactly at the right end of each legend key
+                     title.hjust = 0.5,
+                     nrow = 1,
+                     byrow = T,
+                     label.position = "bottom"
+                   ))+
+  theme_map() + ####
+  theme(legend.position = "bottom") +
+  # geom_path(data = shp.f, aes(x = long, y = lat, group = group), 
+  #           color = "white", size = 0.05)+
+  geom_path(data = state.f, aes(x = long, y = lat, group = group), 
+            color = "white", size = 0.2)+
+  theme_map() + ####
+  theme(legend.position = "bottom") +
+  labs(title='B. US nitrogen dioxide concentrations.',
+       subtitle='Larkin et al. 2017, annual average concentrations for 2011.')
+
+ggsave('us.larkin.pdf')
+#ggsave('us.larkin.png',dpi=320)
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
 vd.pm <- raster('conc.us.vd.pm.2016.tif')
 r <- vd.pm
 
@@ -158,38 +237,49 @@ df <- as.data.frame(df)
 colnames(df) <- c('lon','lat','val')
 r.mean <- round((r.min+r.max)/2,0)
 
+brks <- c(1,5,7,9,10,15,20,27)
+labels <- c('1','2-5','6-7','8-9','10-15','16-20','>20')
+
+df$brks <- cut(df$val, 
+               breaks = brks, 
+               include.lowest = TRUE, 
+               labels = labels)
+
+brks_scale <- levels(df$brks)
+labels_scale <- brks_scale
+
+
+
 pm <- autoplot(base)  +
-  geom_tile(data=df,aes(lon, lat, fill = val),alpha=0.8) +
-  scale_fill_gradient2(expression(paste(µg/m^3)),
-                       low = "#A16928", 
-                       mid = "#edeac2", 
-                       high = "#2887a1",
-                       midpoint = r.mean,
-                       breaks=c(r.min,r.mean,r.max),
-                       labels=c(min.r.label,r.mean,max.r.label),
-                       limits=c(r.min, r.max),
-                       na.value = 'grey50',
-                       guide = guide_colourbar(
-                         direction = "horizontal",
-                         label=TRUE,
-                         keyheight = unit(2, units = "mm"),
-                         title.position = 'top',
-                         title.hjust = 0.5,
-                         label.hjust = 0.5,
-                         barwidth = 15,
-                         nrow = 1,
-                         byrow = T,
-                         label.position = "bottom"))+
-  geom_path(data = co.f, aes(x = long, y = lat, group = group), 
-            color = "white", size = 0.1)+
-  geom_path(data = state.f, aes(x = long, y = lat, group = group), 
-            color = "white", size = 0.1)+
+  geom_tile(data=df,aes(lon, lat, fill = df$brks),alpha=0.8) +
+  scale_fill_manual(values=c('#A16928','#bd925a','#d6bd8d','#edeac2','#b5c8b8','#79a7ac','#2887a1'),
+                    name = expression(paste(µg/m^3)),
+                    breaks=brks_scale,
+                    labels = labels_scale,
+                    drop=FALSE,
+                    na.value = '#A16928',
+                    guide = guide_legend(
+                      direction = "horizontal",
+                      keyheight = unit(2, units = "mm"),
+                      keywidth = unit(140 / length(labels), units = "mm"),
+                      title.position = 'top',
+                      # I shift the labels around, the should be placed 
+                      # exactly at the right end of each legend key
+                      title.hjust = 0.5,
+                      nrow = 1,
+                      byrow = T,
+                      label.position = "bottom"
+                    ))+
   theme_map() + ####
   theme(legend.position = "bottom") +
-  labs(title='B. US fine particulate matter concentrations.',
+  geom_path(data = state.f, aes(x = long, y = lat, group = group), 
+            color = "white", size = 0.2)+
+  theme_map() + ####
+  theme(legend.position = "bottom") +
+  labs(title='C. US fine particulate matter concentrations.',
        subtitle='van Donkelaar et al. 2016.') ###############################################
 #ggsave('us.vd.pm.png',dpi=320)
-#ggsave('us.vd.pm.pdf')
+ggsave('us.vd.pm.pdf')
 
-plot <- plot_grid(q, pm)
-ggsave('test_grid2.pdf', height=7, width=14)
+plot <- plot_grid(q, no2, pm)
+ggsave('test_grid3.pdf', height=7, width=21)
